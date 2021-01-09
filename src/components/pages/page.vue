@@ -19,38 +19,35 @@
     <div id="formFooter">
       <a class="underlineHover" href="#">Forgot Password?</a>
     </div>
-    <router-link to="/page/child1">1</router-link>
-    <router-link to="/page/child3">3</router-link>
-
   </div>
 
 </template>
 
-<script>
-export default {
-  data(){
-    return{
-      user:{
-        username:'',
-        password:''
-      }
-    }
-  },
-  created(){
-    // console.log(this.$route.params.id);//參數
-    this.$http.get('https://randomuser.me/api/')
-    .then((result) => {
-      console.log(result)
-    }).catch((err) => {
-      console.log(err)
-    });
-  },
-  methods:{
+// <script>
+// export default {
+//   data(){
+//     return{
+//       user:{
+//         username:'',
+//         password:''
+//       }
+//     }
+//   },
+//   created(){
+//     // console.log(this.$route.params.id);//參數
+//     this.$http.get('https://randomuser.me/api/')
+//     .then((result) => {
+//       console.log(result)
+//     }).catch((err) => {
+//       console.log(err)
+//     });
+//   },
+//   methods:{
     
 
-  }
-}
-</script>
+//   }
+// }
+// </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
