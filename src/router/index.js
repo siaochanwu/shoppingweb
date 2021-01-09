@@ -1,28 +1,30 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
+//官方
 import Home from '../views/Home.vue'
 import page from '@/components/pages/page.vue'
+import Login from "@/components/pages/Login"
 
-Vue.use(VueRouter)
+//自訂
 
+Vue.use(VueRouter)//啟用
+
+//定義路徑
 const routes = [
+  {
+    path:'*',//防止隨便改網址
+    redirect:'login'
+  },
   {
     path: '/',
     name: 'Home',
-    component: Home
+    component: Home,//對應元件
+    meta: { requiresAuth: true }//路油源信息
   },
   {
-    path: '/about',
-    name: 'About',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
-  },
-  {
-    path: '/page',
-    name: 'page',
-    component: page
+    path:'/login',
+    name: 'Login',
+    component:Login
   }
 ]
 
@@ -30,4 +32,4 @@ const router = new VueRouter({
   routes
 })
 
-export default router
+export default router //輸出
