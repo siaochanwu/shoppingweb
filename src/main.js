@@ -7,11 +7,14 @@ import VueAxios from "vue-axios";
 import 'bootstrap';
 import Loading from "vue-loading-overlay";
 import "vue-loading-overlay/dist/vue-loading.css";
+import "./bus";
+import currencyFilter from "./filters/currency";
 
 Vue.config.productionTip = false;
 axios.defaults.withCredentials = true; //儲存cookie
 Vue.use(VueAxios, axios);
 Vue.component('Loading',Loading);//全域啟用元件
+Vue.filter('currency',currencyFilter)
 
 new Vue({
   router,

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <loading :active.sync="isLoading" ></loading>
+    <loading :active.sync="isLoading"></loading>
     <div class="text-right mt-4">
       <button
         class="btn btn-primary"
@@ -19,15 +19,16 @@
           <th width="120">原價</th>
           <th width="120">售價</th>
           <th width="100">是否啟用</th>
-          <th width="100">編輯</th>
+          <th width="90">編輯</th>
+          <th width="90">刪除</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="item in products" :key="item.id">
           <td>{{ item.category }}</td>
           <td>{{ item.title }}</td>
-          <td class="text-right">{{ item.origin_price }}</td>
-          <td class="text-right">{{ item.price }}</td>
+          <td class="text-right">{{ item.origin_price | currency}}</td>
+          <td class="text-right">{{ item.price | currency}}</td>
           <td>
             <span v-if="item.is_enabled" class="text-success">啟用</span>
             <span v-else>未啟用</span>
@@ -41,9 +42,36 @@
               編輯
             </button>
           </td>
+          <td>
+            <button
+              class="btn btn-outline-primary"
+              btn-sm
+              @click="deleteModal(item)"
+            >
+              刪除
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
+
+    <nav aria-label="Page navigation example">
+    <ul class="pagination">
+      <li class="page-item" :class="{'disabled': !pagination.has_pre}">
+        <a class="page-link" href="#" aria-label="Previous" @click.prevent="getProducts(pagination.current_page-1)">
+          <span aria-hidden="true">&laquo;</span>
+        </a>
+      </li>
+      <li class="page-item" v-for="page in pagination.total_pages" :key="page" :class="{'active': pagination.current_page == page}"><a class="page-link" href="#" @click.prevent="getProducts(page)">{{page}}</a></li>
+      <li class="page-item" :class="{'disabled': !pagination.has_next}">
+        <a class="page-link" href="#" aria-label="Next" @click.prevent="getProducts(pagination.current_page+1)">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    </ul>
+  </nav> 
+
+
     <div
       class="modal fade"
       id="productModal"
@@ -83,13 +111,17 @@
                 <div class="form-group">
                   <label for="customFile"
                     >或 上傳圖片
-                    <i class="fas fa-spinner fa-spin" v-if="status.fileUploading"></i>
+                    <i
+                      class="fas fa-spinner fa-spin"
+                      v-if="status.fileUploading"
+                    ></i>
                   </label>
                   <input
                     type="file"
                     id="customFile"
                     class="form-control"
-                    ref="files" @change="uploadFile"
+                    ref="files"
+                    @change="uploadFile"
                   />
                 </div>
                 <img
@@ -215,96 +247,168 @@
         </div>
       </div>
     </div>
+    <!--Delete Modal-->
+    <div
+      class="modal fade"
+      id="delProductModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content border-0">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="exampleModalLabel">
+              <span>刪除產品</span>
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            是否刪除
+            <strong class="text-danger">{{ tempProduct.title }}</strong>
+            商品(刪除後將無法恢復)。
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              data-dismiss="modal"
+            >
+              取消
+            </button>
+            <button type="button" class="btn btn-danger" @click="deleteProduct">
+              確認刪除
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
-
 <script>
-import $ from 'jquery'
+import $ from "jquery";
 
 export default {
-    data() {
+  data() {
     return {
       products: [],
       tempProduct: {},
-      isNew:false,
-      isLoading:false,
-      status:{
-        fileUploading:false
-      }
+      pagination: {},
+      isNew: false,
+      isLoading: false,
+      status: {
+        fileUploading: false,
+      },
     };
   },
   methods: {
-    getProducts() {
+    getProducts(page =1) {
       const vm = this;
       this.isLoading = true;
-      const api = "https://vue-course-api.hexschool.io/api/wendywu007/products";
+      const api = `https://vue-course-api.hexschool.io/api/wendywu007/admin/products?page=${page}`;
       this.$http.get(api).then((response) => {
-      this.isLoading = false;
+        this.isLoading = false;
         console.log(response.data);
         vm.products = response.data.products;
+        vm.pagination = response.data.pagination;
       });
     },
-    openModal(isNew,item) {
-      if(isNew){
-        this.tempProduct={};
+    openModal(isNew, item) {
+      if (isNew) {
+        this.tempProduct = {};
         this.isNew = true;
-      }else{
-        this.tempProduct = Object.assign({},item);//因物件會傳參考的關係要用空物件
+      } else {
+        this.tempProduct = Object.assign({}, item); //因物件會傳參考的關係要用空物件
         this.isNew = false;
-      };
-        $("#productModal").modal("show");
-
+      }
+      $("#productModal").modal("show");
     },
-    updateProduct(){
+    deleteModal(item) {
       const vm = this;
-      let api = "https://vue-course-api.hexschool.io/api/wendywu007/admin/product";
-      let httpMethod = 'post';
-      if(!vm.isNew){
-        api = `https://vue-course-api.hexschool.io/api/wendywu007/admin/product/${vm.tempProduct.id}`;
-        httpMethod = 'put';
-      };
-      this.$http[httpMethod](api, {data: vm.tempProduct}).then((response) => {
+      vm.tempProduct = item.id;
+      $("#delProductModal").modal("show");
+    },
+    deleteProduct() {
+      var vm = this;
+      const api = `https://vue-course-api.hexschool.io/api/wendywu007/admin/product/${vm.tempProduct}`;
+      this.$http.delete(api).then((response) => {
         console.log(response.data);
-        // vm.products = response.data.products;
-        if(response.data.success){
-          $("#productModal").modal("hide");
+        if (response.data.success) {
+          $("#delProductModal").modal("hide");
           vm.getProducts();
-        }else{
-          $("#productModal").modal("hide");
+        } else {
+          $("#delProductModal").modal("hide");
           vm.getProducts();
-          console.log('新增失敗')
+          console.log("刪除失敗");
         }
       });
     },
-    uploadFile(){
+    updateProduct() {
+      const vm = this;
+      let api =
+        "https://vue-course-api.hexschool.io/api/wendywu007/admin/product";
+      let httpMethod = "post";
+      if (!vm.isNew) {
+        api = `https://vue-course-api.hexschool.io/api/wendywu007/admin/product/${vm.tempProduct.id}`;
+        httpMethod = "put";
+      }
+      this.$http[httpMethod](api, { data: vm.tempProduct }).then((response) => {
+        console.log(response.data);
+        // vm.products = response.data.products;
+        if (response.data.success) {
+          $("#productModal").modal("hide");
+          vm.getProducts();
+        } else {
+          $("#productModal").modal("hide");
+          vm.getProducts();
+          console.log("新增失敗");
+        }
+      });
+    },
+    uploadFile() {
       console.log(this);
       const uploadFiled = this.$refs.files.files[0];
       const vm = this;
       const formData = new FormData();
-      formData.append('file-to-upload',uploadFiled);
-      const url  = "https://vue-course-api.hexschool.io/api/wendywu007/admin/upload";
+      formData.append("file-to-upload", uploadFiled);
+      const url =
+        "https://vue-course-api.hexschool.io/api/wendywu007/admin/upload";
       vm.status.fileUploading = true;
-      this.$http.post(url,formData,{
-        headers:{
-          'Content-Type': 'multipart/form-data'
-        },
-      }).then((response)=>{
-      vm.status.fileUploading = false;
-        console.log(response.data);
-        if(response.data.success){
-          // vm.tempProduct.imageUrl = response.data.imageUrl;
-          vm.$set(vm.tempProduct, 'imageUrl', response.data.imageUrl);//$set強制寫入
-        }
-      })
-    }
+      this.$http
+        .post(url, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        })
+        .then((response) => {
+          vm.status.fileUploading = false;
+          console.log(response.data);
+          if (response.data.success) {
+            // vm.tempProduct.imageUrl = response.data.imageUrl;
+            vm.$set(vm.tempProduct, "imageUrl", response.data.imageUrl); //$set強制寫入
+          }else{
+            this.$bus.$emit('messsage:push', response.data.message, 'danger');
+            }
+        });
+    },
   },
   created() {
-    const myCookie = document.cookie.replace(/(?:(?:^|.*;\s*)haxToken\s*\=\s*([^;]*).*$)|^.*$/, "$1");
-    console.log("myCookie",myCookie);
-    this.$http.defaults.headers.common['Authorization'] = myCookie;
+    const myCookie = document.cookie.replace(
+      /(?:(?:^|.*;\s*)haxToken\s*\=\s*([^;]*).*$)|^.*$/,
+      "$1"
+    );
+    // console.log("myCookie", myCookie);
+    this.$http.defaults.headers.common["Authorization"] = myCookie;
     this.getProducts();
   },
-
-}
+};
 </script>

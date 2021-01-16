@@ -25,9 +25,28 @@
       />
       <ul class="navbar-nav px-3">
         <li class="nav-item text-nowrap">
-          <a class="nav-link" href="#">Sign out</a>
+          <a class="nav-link" href="#" @click.prevent="logout">Sign out</a>
         </li>
       </ul>
     </nav>
   </div>
 </template>
+
+<script>
+export default {
+  methods:{
+    logout(){
+      let vm = this;
+      this.$http.post("https://vue-course-api.hexschool.io/logout")
+      .then((Response)=>{
+        console.log(Response.data);
+        vm.$router.push('/login')
+      })
+      .catch((err)=>{
+        console.log(err)
+      })
+    }
+  }
+  
+}
+</script>

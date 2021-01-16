@@ -1,6 +1,7 @@
 <template>
   <div>
     <Navbar />
+    <Alert></Alert>
     <div class="container-fluid">
       <div class="row">
         <Sidebar></Sidebar>
@@ -16,12 +17,14 @@
 <script>
 import Sidebar from "./Sidebar"; //插入元件
 import Navbar from "./Navbar";
+import Alert from "./AlertMessage";
 
 export default{
   components: {
     //匯入元件
     Sidebar,
     Navbar,
+    Alert,
   },
 }
 </script>
